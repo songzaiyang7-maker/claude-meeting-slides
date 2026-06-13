@@ -403,33 +403,19 @@ IK 调用 & 异步 call\_async \\
 
 \vspace{6pt}
 
-\begin{itemize}\setlength{\itemsep}{3pt}\normalsize
-  \item[\textcolor{wingreen}{\textbf{+}}] 每步注册下一步回调后立即返回
-  \item[\textcolor{wingreen}{\textbf{+}}] Executor 每步之间空闲，能处理响应
-  \item[\textcolor{wingreen}{\textbf{+}}] 配合多线程 Executor + 可重入回调组
-  \item[\textcolor{accent}{\textbf{$\times$}}] 回调中永远不要阻塞等待
-\end{itemize}
-
-\end{minipage}
-
-\vspace{8pt}
-
-% --- 全宽底部:阻塞 vs 非阻塞核心对比 (与 page 2 下方布局呼应) ---
 \begin{center}
-{\normalsize\bfseries\textcolor{mainblue}{核心对比：阻塞 vs 非阻塞}}
-\end{center}
-
-\vspace{4pt}
-\begin{center}
-\begin{tabular}{lll}
+\begin{tabular}{cl}
 \toprule
-& \textbf{阻塞} & \textbf{非阻塞} \\
+\textbf{标记} & \textbf{设计要点} \\
 \midrule
-调用 & 阻塞等待 & 注册回调 \\
-等待 & 线程被占住 & 立即返回 \\
-Executor & 死锁 & 空闲 \\
+\textcolor{wingreen}{\textbf{+}} & 每步注册下一步回调后立即返回 \\
+\textcolor{wingreen}{\textbf{+}} & Executor 每步之间空闲，能处理响应 \\
+\textcolor{wingreen}{\textbf{+}} & 配合多线程 Executor + 可重入回调组 \\
+\textcolor{accent}{\textbf{$\times$}} & 回调中永远不要阻塞等待 \\
 \bottomrule
 \end{tabular}
 \end{center}
+
+\end{minipage}
 
 \end{document}
