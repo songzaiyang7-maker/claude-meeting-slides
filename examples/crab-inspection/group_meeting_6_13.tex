@@ -1,0 +1,428 @@
+\documentclass[landscape,11pt]{article}
+\usepackage[UTF8]{ctex}
+\usepackage{geometry}
+\geometry{margin=0.7cm}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, fit, backgrounds, calc, shadows, shapes.geometric}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{fontspec}
+
+\definecolor{mainblue}{RGB}{34,80,140}
+\definecolor{wingreen}{RGB}{50,140,50}
+\definecolor{secondaryblue}{RGB}{34,101,156}
+\definecolor{accent}{RGB}{200,40,40}
+\definecolor{accentorange}{RGB}{210,120,20}
+\definecolor{lightbg}{RGB}{245,248,252}
+
+\tikzset{
+  comp/.style={draw=black!70, thick, rounded corners=4pt, fill=white,
+               minimum width=2.0cm, minimum height=0.7cm, align=center,
+               font=\footnotesize\bfseries,
+               drop shadow={shadow xshift=0.6pt, shadow yshift=-0.6pt, opacity=0.08}},
+  sbox/.style={draw=black!40, thick, rounded corners=6pt, inner sep=8pt},
+  arrow/.style={->, >=Stealth, thick, black!60},
+  tag/.style={font=\scriptsize\bfseries, rounded corners=2pt, inner sep=2pt, text=white},
+}
+
+\begin{document}
+\thispagestyle{empty}
+
+% ============================================================
+% PAGE 1: 系统架构图 (示例 - 已脱敏)
+% ============================================================
+
+\begin{center}
+{\LARGE\bfseries\textcolor{mainblue}{蟹公寓巡检系统 —— 架构总览}}\\[3pt]
+{\large\textcolor{black!50}{多模式感知 $\;\cdot\;$ 巡检状态机 $\;\cdot\;$ 上行对接}}
+\end{center}
+
+\vspace{4pt}
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.35cm and 0.45cm]
+
+% --- 深度相机 (通用,不写型号) ---
+\node[comp, fill=blue!8, draw=secondaryblue, minimum width=2.0cm] (rs) at (-9.6, -2.0) {深度相机\\RGB-D};
+
+% --- 感知节点大框 ---
+\node[sbox, fill=lightbg, draw=secondaryblue, minimum width=7.5cm, minimum height=4.4cm]
+      (detect) at (-3.0, -2.0) {};
+\node[fill=secondaryblue, text=white, font=\small\bfseries,
+      rounded corners=2pt, inner sep=3pt]
+      at (-3.0, -0.05) {感知节点 (双模式)};
+
+% 模式A: 目标定位分支 (通用术语)
+\node[comp, fill=wingreen!10, draw=wingreen, minimum width=1.8cm] (detA)
+    at (-5.5, -1.0) {目标检测\\(关键点)};
+\node[comp, fill=wingreen!10, draw=wingreen, minimum width=1.8cm] (filt)
+    at (-3.0, -1.0) {时序滤波};
+\node[comp, fill=wingreen!10, draw=wingreen, minimum width=1.8cm] (pose)
+    at (-0.5, -1.0) {位姿估计};
+
+\node[font=\scriptsize\bfseries, text=wingreen, anchor=south]
+    at (-5.5, -0.65) {模式A: 目标定位};
+
+\draw[arrow, wingreen!80] (detA) -- (filt);
+\draw[arrow, wingreen!80] (filt) -- (pose);
+
+% 模式B: 状态判别分支 (通用术语)
+\node[comp, fill=accent!8, draw=accent, minimum width=1.8cm] (detB)
+    at (-5.5, -2.9) {目标检测};
+\node[comp, fill=accent!8, draw=accent, minimum width=1.8cm] (buf)
+    at (-3.0, -2.9) {帧缓冲\\(定长窗口)};
+\node[comp, fill=accent!8, draw=accent, minimum width=1.8cm] (cls)
+    at (-0.5, -2.9) {时序分类};
+
+\node[font=\scriptsize\bfseries, text=accent, anchor=south]
+    at (-5.5, -2.55) {模式B: 状态判别};
+
+\draw[arrow, accent!80] (detB) -- (buf);
+\draw[arrow, accent!80] (buf) -- (cls);
+
+% 相机 → 节点 (水平进入框左侧)
+\draw[arrow, secondaryblue] (rs.east) -- node[above, font=\scriptsize] {RGB+Depth} (detect.west);
+
+% --- 输出话题 (通用名) ---
+\node[comp, fill=yellow!10, draw=black!50, minimum width=1.8cm] (tout)
+    at (2.5, -1.0) {目标位姿\\Pose};
+\node[comp, fill=yellow!10, draw=black!50, minimum width=1.8cm] (sout)
+    at (2.5, -2.9) {状态分数\\Float};
+
+\draw[arrow] (pose.east) -- (tout.west);
+\draw[arrow] (cls.east) -- (sout.west);
+
+% ================================================================
+% --- 巡检状态机 (通用状态名 S1-S5,不带具体参数) ---
+% ================================================================
+\node[sbox, fill=wingreen!5, draw=wingreen, minimum width=8.5cm, minimum height=4.2cm]
+      (insp) at (8.5, -2.0) {};
+\node[fill=wingreen, text=white, font=\small\bfseries,
+      rounded corners=2pt, inner sep=3pt]
+      at (8.5, -0.05) {巡检状态机 (单列模式)};
+
+\node[comp, fill=wingreen!8, draw=wingreen, minimum width=1.5cm, minimum height=0.7cm,
+      font=\scriptsize\bfseries] (s1) at (5.2, -0.7) {S1\\稳定};
+\node[comp, fill=wingreen!8, draw=wingreen, minimum width=1.5cm, minimum height=0.7cm,
+      font=\scriptsize\bfseries] (s2) at (7.4, -0.7) {S2\\居中};
+\node[comp, fill=wingreen!8, draw=wingreen, minimum width=1.5cm, minimum height=0.7cm,
+      font=\scriptsize\bfseries] (s3) at (9.6, -0.7) {S3\\靠近};
+\node[comp, fill=accent!10, draw=accent, minimum width=1.5cm, minimum height=0.7cm,
+      font=\scriptsize\bfseries] (s4) at (11.8, -0.7) {S4\\停留};
+
+\draw[arrow, wingreen] (s1) -- (s2);
+\draw[arrow, wingreen] (s2) -- (s3);
+\draw[arrow, wingreen] (s3) -- (s4);
+
+\node[comp, fill=wingreen!8, draw=wingreen, minimum width=1.7cm, minimum height=0.7cm,
+      font=\scriptsize\bfseries] (s5) at (7.4, -2.5) {S5\\后退换框};
+\node[comp, fill=accentorange!10, draw=accentorange, minimum width=1.3cm, minimum height=0.7cm,
+      font=\scriptsize\bfseries] (s6) at (11.8, -2.5) {DONE};
+
+\draw[arrow, wingreen] (s4.south) -- ++(0, -0.3) -| (s5.north);
+\draw[arrow, wingreen] (s4.south) -- (s6.north);
+\draw[arrow, wingreen] (s5.west) -| (s1.south);
+
+\draw[arrow, thick] (tout.east) -- ++(0.3, 0) |- (s2.west);
+\draw[arrow, thick, accent!80] (sout.east) -- ++(0.4, 0) |- ([yshift=0.6cm]s4.north) -- (s4.north);
+
+% --- 底部:服务节点 + 上行系统 (通用名) ---
+\node[comp, fill=secondaryblue!10, draw=secondaryblue, minimum width=2.4cm] (server)
+    at (4.5, -5.0) {服务节点\\HTTP API};
+\node[comp, fill=accentorange!10, draw=accentorange, minimum width=2.0cm] (upstream)
+    at (8.7, -5.0) {上行系统\\调度};
+
+\draw[arrow] (insp.south) -- ++(0, -0.2) -| (server.north);
+\draw[arrow, secondaryblue, thick] (server) -- node[above, font=\scriptsize] {状态回传} (upstream);
+
+% --- 左下角说明文字 (不含具体数值) ---
+\node[font=\small, align=left, text=black!65, anchor=north west, text width=9.2cm] at (-6.75, -4.4) {%
+    \textcolor{wingreen}{\textbf{模式A}}: 目标检测 $\to$ 时序滤波 $\to$ 位姿估计\\[2pt]
+    \textcolor{accent}{\textbf{模式B}}: 目标检测 $\to$ 帧缓冲 $\to$ 时序分类\\[2pt]
+    \textcolor{wingreen}{\textbf{状态机}}: S2/S3 开启模式A $\cdot$ S4 开启模式B\\[2pt]
+    \textcolor{secondaryblue}{\textbf{上行对接}}: 鉴权 $\cdot$ 单元粒度回传 $\cdot$ 复位接口
+};
+
+\end{tikzpicture}
+\end{center}
+
+\newpage
+\thispagestyle{empty}
+
+% ============================================================
+% PAGE 2: 状态判别集成 (示例 - 已脱敏)
+% ============================================================
+
+\begin{center}
+{\LARGE\bfseries\textcolor{mainblue}{状态判别 —— 节点集成}}\\[3pt]
+{\large\textcolor{black!50}{时序分类管线 $\;\cdot\;$ 双模式节点 $\;\cdot\;$ 状态机联动}}
+\end{center}
+
+\vspace{4pt}
+
+% --- 判别管线 (6 步,无具体数值) ---
+\begin{center}
+\begin{tikzpicture}[node distance=0.3cm and 0.4cm]
+
+\node[font=\normalsize\bfseries, secondaryblue] at (-1.25, 1.0) {判别管线};
+
+\node[comp, fill=secondaryblue!10, draw=secondaryblue, minimum width=2.0cm, minimum height=0.85cm,
+      font=\footnotesize\bfseries] (step1) at (-8.0, 0) {取帧};
+\node[comp, fill=wingreen!10, draw=wingreen, minimum width=2.0cm, minimum height=0.85cm,
+      font=\footnotesize\bfseries] (step2) at (-5.3, 0) {目标检测\\(置信度)};
+\node[comp, fill=accentorange!10, draw=accentorange, minimum width=2.0cm, minimum height=0.85cm,
+      font=\footnotesize\bfseries] (step3) at (-2.6, 0) {帧缓冲\\定长窗口};
+\node[comp, fill=accent!10, draw=accent, minimum width=2.0cm, minimum height=0.85cm,
+      font=\footnotesize\bfseries] (step4) at (0.1, 0) {时序模型\\分类};
+\node[comp, fill=mainblue!10, draw=mainblue, minimum width=2.0cm, minimum height=0.85cm,
+      font=\footnotesize\bfseries] (step5) at (2.8, 0) {状态分数};
+\node[comp, fill=secondaryblue!10, draw=secondaryblue, minimum width=2.0cm, minimum height=0.85cm,
+      font=\footnotesize\bfseries] (step6) at (5.5, 0) {话题发布};
+
+\draw[arrow, thick] (step1) -- (step2);
+\draw[arrow, thick] (step2) -- (step3);
+\draw[arrow, thick] (step3) -- node[above, font=\scriptsize] {窗口满} (step4);
+\draw[arrow, thick] (step4) -- (step5);
+\draw[arrow, thick] (step5) -- (step6);
+
+\foreach \i/\x in {1/-8.0, 2/-5.3, 3/-2.6, 4/0.1, 5/2.8, 6/5.5} {
+  \node[tag, fill=black!50] at (\x, -0.7) {Step \i};
+}
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{4pt}
+
+% --- 右半先放(集成方式),左半后放(模型结构+标题对齐) ---
+\begin{minipage}[t]{0.48\textwidth}
+
+\vspace{0pt}%
+\begin{center}
+{\normalsize\bfseries\textcolor{mainblue}{时序模型结构}}
+\end{center}
+
+\vspace{4pt}
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.3cm, scale=0.85, transform shape]
+  \node[comp, fill=wingreen!10, draw=wingreen, minimum width=2.8cm, minimum height=0.6cm,
+        font=\footnotesize\bfseries] (input) at (0, 0) {输入: (B, T, C, H, W)};
+  \node[comp, fill=secondaryblue!10, draw=secondaryblue, minimum width=2.8cm, minimum height=0.6cm,
+        font=\footnotesize\bfseries, below=of input] (backbone) {视觉骨干 (特征提取)};
+  \node[comp, fill=accentorange!10, draw=accentorange, minimum width=2.8cm, minimum height=0.6cm,
+        font=\footnotesize\bfseries, below=of backbone] (temporal) {时序模块};
+  \node[comp, fill=accent!10, draw=accent, minimum width=2.8cm, minimum height=0.6cm,
+        font=\footnotesize\bfseries, below=of temporal] (head) {分类头};
+  \node[comp, fill=mainblue!10, draw=mainblue, minimum width=2.8cm, minimum height=0.6cm,
+        font=\footnotesize\bfseries, below=of head] {N 类输出};
+
+  \draw[arrow, thick] (input) -- (backbone);
+  \draw[arrow, thick] (backbone) -- (temporal);
+  \draw[arrow, thick] (temporal) -- (head);
+  \draw[arrow, thick] (head) -- ++(0, -0.3);
+\end{tikzpicture}
+\end{center}
+
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+{\normalsize\bfseries\textcolor{mainblue}{集成方式}}
+
+\vspace{4pt}
+\begin{tabular}{cl}
+\toprule
+\textbf{标记} & \textbf{设计要点} \\
+\midrule
+\textcolor{wingreen}{\textbf{+}} & 感知节点注册为\textbf{双模式} \\
+\textcolor{wingreen}{\textbf{+}} & Bool 话题 A 切换状态判别 \\
+\textcolor{wingreen}{\textbf{+}} & Bool 话题 B 切换目标定位 \\
+\textcolor{wingreen}{\textbf{+}} & S4 阶段：关定位，开判别 \\
+\textcolor{accent}{\textbf{$\times$}} & 推理冷却：窗口间隔触发 \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+
+\vspace{8pt}
+
+% --- 全页宽度:分数映射 + 节点接口 (与上方模型结构/集成方式同 minipage 几何) ---
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+{\normalsize\bfseries 状态分数映射}
+
+\vspace{4pt}
+\begin{tabular}{lcc}
+\toprule
+\textbf{类别} & \textbf{含义} & \textbf{分数段} \\
+\midrule
+类别 A & 状态 1 & 高分段 \\
+类别 B & 状态 2 & 中分段 \\
+类别 C & 状态 3 & 低分段 \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+{\normalsize\bfseries 节点接口}
+
+\vspace{4pt}
+\begin{tabular}{ll}
+\toprule
+\textbf{话题} & \textbf{类型/方向} \\
+\midrule
+状态分数    & Float / 发布 \\
+切换 A      & Bool / 订阅 \\
+切换 B      & Bool / 订阅 \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+
+\newpage
+\thispagestyle{empty}
+
+% ============================================================
+% PAGE 3: 抓取系统 & 阻塞/非阻塞算法复盘 (示例 - 已脱敏)
+% ============================================================
+
+\begin{center}
+{\LARGE\bfseries\textcolor{mainblue}{抓取系统 \& 阻塞/非阻塞算法复盘}}\\[3pt]
+{\large\textcolor{black!50}{手眼伺服 $\;\cdot\;$ 死锁诊断 $\;\cdot\;$ 异步回调链}}
+\end{center}
+
+\vspace{6pt}
+
+\begin{minipage}[t]{0.45\textwidth}
+
+{\large\bfseries\textcolor{accentorange}{抓取子系统}}
+
+\vspace{6pt}
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.3cm and 0.4cm, scale=0.95, transform shape]
+  \node[comp, fill=secondaryblue!10, draw=secondaryblue, minimum width=2.2cm] (det)
+      at (0, 0) {目标检测\\+ 深度};
+  \node[comp, fill=wingreen!10, draw=wingreen, minimum width=2.2cm, below=0.5cm of det] (topic)
+      {目标位姿\\Pose};
+  \node[comp, fill=accentorange!10, draw=accentorange, minimum width=2.2cm, below=0.5cm of topic] (task)
+      {任务状态机};
+
+  \node[comp, fill=wingreen!8, draw=wingreen, minimum width=1.4cm, minimum height=0.6cm,
+        font=\footnotesize\bfseries, below left=0.45cm and -0.3cm of task] (w) {WAITING};
+  \node[comp, fill=wingreen!8, draw=wingreen, minimum width=1.4cm, minimum height=0.6cm,
+        font=\footnotesize\bfseries, right=0.25cm of w] (c) {CENTERING};
+  \node[comp, fill=accent!8, draw=accent, minimum width=1.4cm, minimum height=0.6cm,
+        font=\footnotesize\bfseries, right=0.25cm of c] (g) {GRASPING};
+  \node[comp, fill=wingreen!8, draw=wingreen, minimum width=1.4cm, minimum height=0.6cm,
+        font=\footnotesize\bfseries, right=0.25cm of g] (h) {RELEASING};
+
+  \draw[arrow, thick] (w) -- (c);
+  \draw[arrow, thick] (c) -- (g);
+  \draw[arrow, thick] (g) -- (h);
+
+  \node[comp, fill=accent!8, draw=accent, minimum width=2.2cm,
+        below=0.4cm of g] (hand) {末端执行器};
+
+  \draw[arrow, thick] (det) -- (topic);
+  \draw[arrow, thick] (topic) -- (task);
+  \draw[arrow, thick, accent] (g.south) -- node[right, font=\scriptsize] {close} (hand.north);
+  \draw[arrow, thick, wingreen] (h.south) |- node[near end, right, font=\scriptsize] {open} (hand.east);
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{6pt}
+
+{\large\bfseries 关键设计：}
+
+\vspace{3pt}
+\normalsize
+\begin{tabular}{ll}
+\toprule
+\textbf{环节} & \textbf{设计要点} \\
+\midrule
+伺服目标 & 居中至预设距离 \\
+步长限制 & 上限保护 \\
+到位判定 & 多次连续满足 \\
+IK 调用 & 异步 call\_async \\
+运动控制 & 关节轨迹 Action \\
+\bottomrule
+\end{tabular}
+
+\end{minipage}
+\hspace{0.4cm}
+\begin{minipage}[t]{0.49\textwidth}
+
+{\large\bfseries\textcolor{accent}{阻塞 vs 非阻塞 —— 死锁复盘}}
+
+\vspace{6pt}
+
+{\large\bfseries\textcolor{accent}{问题}：}回调中阻塞等待导致死锁
+
+\vspace{6pt}
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.3cm,
+    dblock/.style={draw, rounded corners=3pt, minimum width=4.0cm, minimum height=0.6cm,
+                   font=\normalsize, align=center}]
+  \node[dblock, fill=yellow!20] (a) {回调阻塞等待结果};
+  \node[dblock, fill=red!15, below=of a] (b) {结果到达需 Executor 处理};
+  \node[dblock, fill=blue!15, below=of b] (c) {Executor 线程被回调占住};
+  \node[dblock, fill=green!15, below=of c] (d) {回调不返回 $\to$ Executor 不空闲};
+
+  \draw[->, thick, black!60] (a) -- (b);
+  \draw[->, thick, black!60] (b) -- (c);
+  \draw[->, thick, black!60] (c) -- (d);
+  \draw[->, thick, dashed, red] (d.east) -- ++(0.7, 0) |- (a.east);
+  \node[font=\normalsize\bfseries, red] at (4.2, -0.8) {死锁!};
+\end{tikzpicture}
+\end{center}
+
+\vspace{6pt}
+
+{\large\bfseries\textcolor{wingreen}{解决方案}：异步回调链}
+
+\vspace{4pt}
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.15cm and 0.1cm,
+    cb/.style={draw, rounded corners=3pt, minimum height=0.6cm, minimum width=2.2cm,
+               font=\small\bfseries, align=center}]
+  \node[cb, fill=yellow!20] (c1) at (0, 0) {发起};
+  \node[cb, fill=wingreen!15, right=of c1] (c2) {回调 1};
+  \node[cb, fill=wingreen!15, right=of c2] (c3) {回调 2};
+  \node[cb, fill=wingreen!15, right=of c3] (c4) {回调 3};
+
+  \draw[->, thick, wingreen!80] (c1) -- (c2);
+  \draw[->, thick, wingreen!80] (c2) -- (c3);
+  \draw[->, thick, wingreen!80] (c3) -- (c4);
+\end{tikzpicture}
+\end{center}
+
+\vspace{6pt}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\normalsize
+  \item[\textcolor{wingreen}{\textbf{+}}] 每步注册下一步回调后立即返回
+  \item[\textcolor{wingreen}{\textbf{+}}] Executor 每步之间空闲，能处理响应
+  \item[\textcolor{wingreen}{\textbf{+}}] 配合多线程 Executor + 可重入回调组
+  \item[\textcolor{accent}{\textbf{$\times$}}] 回调中永远不要阻塞等待
+\end{itemize}
+
+\vspace{6pt}
+
+\normalsize
+\begin{tabular}{lll}
+\toprule
+& \textbf{阻塞} & \textbf{非阻塞} \\
+\midrule
+调用 & 阻塞等待 & 注册回调 \\
+等待 & 线程被占住 & 立即返回 \\
+Executor & 死锁 & 空闲 \\
+\bottomrule
+\end{tabular}
+
+\end{minipage}
+
+\end{document}
