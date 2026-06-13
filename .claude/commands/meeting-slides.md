@@ -56,13 +56,24 @@ Use the following template skeleton:
 \documentclass[landscape,11pt]{article}
 \usepackage[UTF8]{ctex}
 \usepackage{geometry}
-\geometry{margin=0.7cm}
+\geometry{margin=0.7cm, footskip=0.6cm}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning, fit, backgrounds, calc, shadows, shapes.geometric}
 \usepackage{xcolor}
 \usepackage{booktabs}
 \usepackage{amsmath}
 \usepackage{fontspec}
+
+% --- Page footer: thin separator + project/date left, page x/y right ---
+% Replace <PROJECT NAME> and <YYYY.MM.DD> below with the actual project name and report date
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[L]{\footnotesize\textcolor{black!50}{<PROJECT NAME> \,$\cdot$\, <YYYY.MM.DD>}}
+\fancyfoot[R]{\footnotesize\textcolor{black!50}{\thepage\,/\,\pageref{LastPage}}}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0.4pt}
 
 % --- Color scheme (customize for your project) ---
 \definecolor{mainblue}{RGB}{34,80,140}
@@ -84,9 +95,9 @@ Use the following template skeleton:
 }
 
 \begin{document}
-\thispagestyle{empty}
+% (header/footer handled globally by the fancyhdr pagestyle declared above)
 
-% Separate pages with \newpage\thispagestyle{empty}
+% Separate pages with \newpage
 
 \end{document}
 ```
@@ -101,7 +112,7 @@ Use the following template skeleton:
 - **Loop/back arrows exit from box side, not bottom** — for RETREAT→SETTLE style back-arrows, exit from source box `west`/`east`, use `-|` to enter target `.south`/`.north` with one turn. Avoids overlap with internal arrows when routing around the bottom
 - **When widening one gap, sync-move the other side's frame** — in horizontal multi-box layouts, widening A→B gap without moving C frame causes B→C collision. Both sides need to move together
 - Keep each page within one screen, no overflow
-- No page numbers or footers
+- Footer (project name · date on the left, page X/Y on the right) is rendered globally by `fancyhdr` from the template — don't add per-page footers manually
 - If descriptive text doesn't fit in boxes, extract it to a `\node` in the page's blank area
 
 ### Step 4: Compile & Iterate
