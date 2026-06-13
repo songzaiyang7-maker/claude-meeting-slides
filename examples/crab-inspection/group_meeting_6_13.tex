@@ -113,22 +113,22 @@
       at (8.5, -0.05) {巡检状态机 (单列模式)};
 
 \node[comp, fill=wingreen!8, draw=wingreen, minimum width=1.5cm, minimum height=0.7cm,
-      font=\scriptsize\bfseries] (s1) at (5.2, -0.7) {S1\\稳定};
+      font=\scriptsize\bfseries] (s1) at (5.2, -1.0) {S1\\稳定};
 \node[comp, fill=wingreen!8, draw=wingreen, minimum width=1.5cm, minimum height=0.7cm,
-      font=\scriptsize\bfseries] (s2) at (7.4, -0.7) {S2\\居中};
+      font=\scriptsize\bfseries] (s2) at (7.4, -1.0) {S2\\居中};
 \node[comp, fill=wingreen!8, draw=wingreen, minimum width=1.5cm, minimum height=0.7cm,
-      font=\scriptsize\bfseries] (s3) at (9.6, -0.7) {S3\\靠近};
+      font=\scriptsize\bfseries] (s3) at (9.6, -1.0) {S3\\靠近};
 \node[comp, fill=accent!10, draw=accent, minimum width=1.5cm, minimum height=0.7cm,
-      font=\scriptsize\bfseries] (s4) at (11.8, -0.7) {S4\\停留};
+      font=\scriptsize\bfseries] (s4) at (11.8, -1.0) {S4\\停留};
 
 \draw[arrow, wingreen] (s1) -- (s2);
 \draw[arrow, wingreen] (s2) -- (s3);
 \draw[arrow, wingreen] (s3) -- (s4);
 
 \node[comp, fill=wingreen!8, draw=wingreen, minimum width=1.7cm, minimum height=0.7cm,
-      font=\scriptsize\bfseries] (s5) at (7.4, -2.5) {S5\\后退换框};
+      font=\scriptsize\bfseries] (s5) at (7.4, -2.9) {S5\\后退换框};
 \node[comp, fill=accentorange!10, draw=accentorange, minimum width=1.3cm, minimum height=0.7cm,
-      font=\scriptsize\bfseries] (s6) at (11.8, -2.5) {DONE};
+      font=\scriptsize\bfseries] (s6) at (11.8, -2.9) {DONE};
 
 \draw[arrow, wingreen] (s4.south) -- ++(0, -0.3) -| (s5.north);
 \draw[arrow, wingreen] (s4.south) -- (s6.north);
@@ -197,7 +197,7 @@
 \draw[arrow, thick] (step5) -- (step6);
 
 \foreach \i/\x in {1/-8.0, 2/-5.3, 3/-2.6, 4/0.1, 5/2.8, 6/5.5} {
-  \node[tag, fill=black!50] at (\x, -0.7) {Step \i};
+  \node[tag, fill=black!50] at (\x, -1.0) {Step \i};
 }
 
 \end{tikzpicture}
